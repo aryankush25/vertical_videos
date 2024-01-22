@@ -1,40 +1,40 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Vertical Videos',
+      title: 'Flutter Drag and Drop POC',
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
+        primarySwatch: Colors.blue,
       ),
-      home: const MyHomePage(title: 'Vertical Videos'),
+      home: MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
-  const MyHomePage({super.key, required this.title});
-
-  final String title;
-
   @override
-  State<MyHomePage> createState() => _MyHomePageState();
+  _MyHomePageState createState() => _MyHomePageState();
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  Map<Key, Offset> items = {};
 
-  void _incrementCounter() {
+  void addItem(Offset initialPosition) {
+    var newItemKey = UniqueKey();
     setState(() {
-      _counter++;
+      items[newItemKey] = initialPosition;
+    });
+  }
+
+  void updateItemPosition(Key itemKey, Offset newPosition) {
+    setState(() {
+      items[itemKey] = newPosition;
     });
   }
 
@@ -42,28 +42,48 @@ class _MyHomePageState extends State<MyHomePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-        title: Text(widget.title),
+        title: Text('Flutter Drag and Drop POC'),
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-          ],
-        ),
+      body: Stack(
+        children: items.entries.map((entry) {
+          return _buildDraggableItem(entry.key, entry.value);
+        }).toList(),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
-      ), // This trailing comma makes auto-formatting nicer for build methods.
+        onPressed: () => addItem(Offset(100, 100)),
+        tooltip: 'Add Emoji',
+        child: Icon(Icons.add),
+      ),
+    );
+  }
+
+  Widget _buildDraggableItem(Key key, Offset initialPosition) {
+    return Positioned(
+      left: initialPosition.dx,
+      top: initialPosition.dy,
+      child: Draggable(
+        data: key,
+        child: EmojiText('🙂'),
+        feedback: Material(
+          child: EmojiText('🙂'),
+          elevation: 4.0,
+        ),
+        onDragEnd: (details) => updateItemPosition(key, details.offset),
+      ),
+    );
+  }
+}
+
+class EmojiText extends StatelessWidget {
+  final String emoji;
+
+  EmojiText(this.emoji);
+
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      emoji,
+      style: TextStyle(fontSize: 40),
     );
   }
 }
