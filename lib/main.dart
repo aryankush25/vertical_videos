@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -12,18 +14,21 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(),
+      home: const MyHomePage(),
     );
   }
 }
 
 class MyHomePage extends StatefulWidget {
+  const MyHomePage({super.key});
+
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  MyHomePageState createState() => MyHomePageState();
 }
 
-class _MyHomePageState extends State<MyHomePage> {
+class MyHomePageState extends State<MyHomePage> {
   Map<Key, Offset> items = {};
+  final GlobalKey stackKey = GlobalKey();
 
   void addItem(Offset initialPosition) {
     var newItemKey = UniqueKey();
@@ -32,27 +37,36 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void updateItemPosition(Key itemKey, Offset newPosition) {
-    setState(() {
-      items[itemKey] = newPosition;
-    });
+  void updateItemPosition(Key itemKey, Offset globalPosition) {
+    RenderBox? renderBox =
+        stackKey.currentContext?.findRenderObject() as RenderBox?;
+
+    if (renderBox != null) {
+      Offset startPosition = renderBox.localToGlobal(Offset.zero);
+      Offset newPosition = globalPosition - startPosition;
+
+      setState(() {
+        items[itemKey] = newPosition;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Flutter Drag and Drop POC'),
+        title: const Text('Flutter Drag and Drop POC'),
       ),
       body: Stack(
+        key: stackKey,
         children: items.entries.map((entry) {
           return _buildDraggableItem(entry.key, entry.value);
         }).toList(),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => addItem(Offset(100, 100)),
+        onPressed: () => addItem(const Offset(100, 100)),
         tooltip: 'Add Emoji',
-        child: Icon(Icons.add),
+        child: const Icon(Icons.add),
       ),
     );
   }
@@ -63,12 +77,12 @@ class _MyHomePageState extends State<MyHomePage> {
       top: initialPosition.dy,
       child: Draggable(
         data: key,
-        child: EmojiText('🙂'),
-        feedback: Material(
-          child: EmojiText('🙂'),
+        feedback: const Material(
           elevation: 4.0,
+          child: EmojiText('🙂'),
         ),
         onDragEnd: (details) => updateItemPosition(key, details.offset),
+        child: const EmojiText('🙂'),
       ),
     );
   }
@@ -77,13 +91,13 @@ class _MyHomePageState extends State<MyHomePage> {
 class EmojiText extends StatelessWidget {
   final String emoji;
 
-  EmojiText(this.emoji);
+  const EmojiText(this.emoji, {super.key});
 
   @override
   Widget build(BuildContext context) {
     return Text(
       emoji,
-      style: TextStyle(fontSize: 40),
+      style: const TextStyle(fontSize: 40),
     );
   }
 }
